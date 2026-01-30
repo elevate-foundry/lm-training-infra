@@ -6,7 +6,7 @@ build/
 .eggs/
 
 # Data and checkpoints
-data/
+/data/
 checkpoints/
 *.bin
 
