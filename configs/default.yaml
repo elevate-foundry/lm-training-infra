@@ -1,0 +1,47 @@
+# Model architecture
+model:
+  vocab_size: 50257        # GPT-2 tokenizer vocab size
+  d_model: 768
+  n_heads: 12
+  n_layers: 12
+  d_ff: 3072               # 4 * d_model
+  max_seq_len: 1024
+  dropout: 0.1
+  bias: false
+
+# Training
+training:
+  batch_size: 32
+  gradient_accumulation_steps: 4
+  max_steps: 100000
+  learning_rate: 3.0e-4
+  min_learning_rate: 3.0e-5
+  warmup_steps: 2000
+  weight_decay: 0.1
+  max_grad_norm: 1.0
+  beta1: 0.9
+  beta2: 0.95
+  lr_scheduler: cosine
+
+# Data
+data:
+  dataset: openwebtext      # HuggingFace dataset name
+  tokenizer: gpt2           # tiktoken encoding name
+  num_workers: 4
+
+# Logging
+logging:
+  log_interval: 10
+  eval_interval: 500
+  eval_steps: 50
+  save_interval: 5000
+  output_dir: checkpoints
+  wandb_project: lm-training
+  wandb_run_name: null
+
+# System
+system:
+  seed: 42
+  dtype: bfloat16           # float32, float16, bfloat16
+  compile: true             # torch.compile
+  device: auto              # auto, cpu, cuda, mps

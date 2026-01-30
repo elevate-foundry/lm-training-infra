@@ -1,0 +1,43 @@
+# Small model for debugging and testing
+model:
+  vocab_size: 50257
+  d_model: 384
+  n_heads: 6
+  n_layers: 6
+  d_ff: 1536
+  max_seq_len: 512
+  dropout: 0.1
+  bias: false
+
+training:
+  batch_size: 16
+  gradient_accumulation_steps: 2
+  max_steps: 10000
+  learning_rate: 5.0e-4
+  min_learning_rate: 5.0e-5
+  warmup_steps: 500
+  weight_decay: 0.1
+  max_grad_norm: 1.0
+  beta1: 0.9
+  beta2: 0.95
+  lr_scheduler: cosine
+
+data:
+  dataset: openwebtext
+  tokenizer: gpt2
+  num_workers: 2
+
+logging:
+  log_interval: 10
+  eval_interval: 200
+  eval_steps: 20
+  save_interval: 1000
+  output_dir: checkpoints
+  wandb_project: lm-training
+  wandb_run_name: small-debug
+
+system:
+  seed: 42
+  dtype: bfloat16
+  compile: false
+  device: auto
