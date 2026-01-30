@@ -162,34 +162,36 @@ class MultiDirectionalGridAttention(nn.Module):
         self.out_proj = nn.Linear(d_model * 4, d_model, bias=False)
         self.norm = RMSNorm(d_model)
 
+        self._mask_cache: dict[tuple[int, int, torch.device], tuple] = {}
+
     def _build_masks(self, H: int, W: int, device: torch.device):
-        """Build causal masks for 4 directions on an HxW grid."""
+        """Build causal masks for 4 directions on an HxW grid (vectorized)."""
+        cache_key = (H, W, device)
+        if cache_key in self._mask_cache:
+            return self._mask_cache[cache_key]
+
         N = H * W
+        idx = torch.arange(N, device=device)
+        rows = idx // W  # (N,)
+        cols = idx % W   # (N,)
 
-        def grid_pos(idx):
-            return idx // W, idx % W
+        ri = rows.unsqueeze(1)  # (N, 1)
+        ci = cols.unsqueeze(1)
+        rj = rows.unsqueeze(0)  # (1, N)
+        cj = cols.unsqueeze(0)
 
-        # Left-to-right: attend to cells in same row with col <= current col,
-        # and all cells in previous rows
-        lr_mask = torch.zeros(N, N, dtype=torch.bool, device=device)
-        rl_mask = torch.zeros(N, N, dtype=torch.bool, device=device)
-        td_mask = torch.zeros(N, N, dtype=torch.bool, device=device)
-        bu_mask = torch.zeros(N, N, dtype=torch.bool, device=device)
+        # L→R: raster order (row-major, left to right)
+        lr_mask = (ri > rj) | ((ri == rj) & (ci >= cj))
+        # R→L: reverse raster
+        rl_mask = (ri < rj) | ((ri == rj) & (ci <= cj))
+        # Top→Down: column-major, top to bottom
+        td_mask = (ci > cj) | ((ci == cj) & (ri >= rj))
+        # Bottom→Up: reverse column-major
+        bu_mask = (ci < cj) | ((ci == cj) & (ri <= rj))
 
-        for i in range(N):
-            ri, ci = grid_pos(i)
-            for j in range(N):
-                rj, cj = grid_pos(j)
-                # L→R: raster order (row-major, left to right)
-                lr_mask[i, j] = (ri > rj) or (ri == rj and ci >= cj)
-                # R→L: reverse raster
-                rl_mask[i, j] = (ri < rj) or (ri == rj and ci <= cj)
-                # Top→Down: column-major, top to bottom
-                td_mask[i, j] = (ci > cj) or (ci == cj and ri >= rj)
-                # Bottom→Up: reverse column-major
-                bu_mask[i, j] = (ci < cj) or (ci == cj and ri <= rj)
-
-        return lr_mask, rl_mask, td_mask, bu_mask
+        result = (lr_mask, rl_mask, td_mask, bu_mask)
+        self._mask_cache[cache_key] = result
+        return result
 
     def forward(self, x: torch.Tensor, grid_h: int, grid_w: int) -> torch.Tensor:
         """
