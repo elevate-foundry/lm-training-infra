@@ -15,7 +15,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import yaml
-from safetensors.torch import save_file
+from safetensors.torch import save_model
 
 from src.model.brailleformer import BrailleFormer, BrailleFormerConfig
 from src.model.baseline import BaselineTransformer, BaselineConfig
@@ -204,7 +204,7 @@ def train(config: dict, data_dir: str, output_dir: str):
                 best_val_loss = val_loss
                 ckpt_path = os.path.join(output_dir, "best")
                 os.makedirs(ckpt_path, exist_ok=True)
-                save_file(model.state_dict(), os.path.join(ckpt_path, "model.safetensors"))
+                save_model(model, os.path.join(ckpt_path, "model.safetensors"))
                 print(f"  → saved best model (val_loss={val_loss:.4f})")
 
         if step % lc["save_interval"] == 0:
