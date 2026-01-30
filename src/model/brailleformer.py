@@ -283,9 +283,10 @@ class BrailleFormer(nn.Module):
         self.config = config
         self.cell_size = config.cell_size
 
-        # Token embedding
+        # Token embedding (allocate extra positions for cell_size padding)
         self.tok_emb = nn.Embedding(config.vocab_size, config.d_model)
-        self.pos_emb = nn.Embedding(config.max_seq_len, config.d_model)
+        max_pos = config.max_seq_len + config.cell_size
+        self.pos_emb = nn.Embedding(max_pos, config.d_model)
         self.drop = nn.Dropout(config.dropout)
 
         # Stage 1: Cell encoder
@@ -369,7 +370,7 @@ class BrailleFormer(nn.Module):
 
         loss = None
         if targets is not None:
-            loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-100)
+            loss = F.cross_entropy(logits.reshape(-1, logits.size(-1)), targets.reshape(-1), ignore_index=-100)
 
         return logits, loss
 

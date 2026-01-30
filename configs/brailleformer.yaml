@@ -26,7 +26,7 @@ training:
 data:
   dataset: roneneldan/TinyStories
   num_workers: 4
-  seq_len: 1024
+  seq_len: 1020              # Multiple of cell_size (6)
 
 logging:
   log_interval: 50
