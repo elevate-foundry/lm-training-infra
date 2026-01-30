@@ -210,7 +210,7 @@ def train(config: dict, data_dir: str, output_dir: str):
         if step % lc["save_interval"] == 0:
             ckpt_path = os.path.join(output_dir, f"step_{step}")
             os.makedirs(ckpt_path, exist_ok=True)
-            save_file(model.state_dict(), os.path.join(ckpt_path, "model.safetensors"))
+            save_model(model, os.path.join(ckpt_path, "model.safetensors"))
 
     # Generate sample
     tokenizer = CharTokenizer()
