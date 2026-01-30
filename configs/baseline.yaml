@@ -1,0 +1,42 @@
+# Baseline transformer PoC config — character-level on TinyStories
+model:
+  type: baseline
+  vocab_size: 256
+  d_model: 384
+  n_heads: 6
+  n_layers: 6
+  d_ff: 1024
+  max_seq_len: 1024
+  dropout: 0.1
+
+training:
+  batch_size: 64
+  gradient_accumulation_steps: 2
+  max_steps: 20000
+  learning_rate: 5.0e-4
+  min_learning_rate: 5.0e-5
+  warmup_steps: 1000
+  weight_decay: 0.1
+  max_grad_norm: 1.0
+  beta1: 0.9
+  beta2: 0.95
+
+data:
+  dataset: roneneldan/TinyStories
+  num_workers: 4
+  seq_len: 1024
+
+logging:
+  log_interval: 50
+  eval_interval: 500
+  eval_steps: 50
+  save_interval: 5000
+  output_dir: checkpoints
+  wandb_project: brailleformer
+  wandb_run_name: null
+
+system:
+  seed: 42
+  dtype: bfloat16
+  compile: false
+  device: auto
